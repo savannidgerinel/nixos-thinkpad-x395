@@ -4,6 +4,8 @@ Because of the various and sundry complications with getting NixOS to work on th
 
 **Be sure to disable secure boot. NixOS cannot boot with secure boot mode enabled in UEFI**
 
+| Feature | Status |
+| ------- | ------ |
 | Suspend/Resume | working |
 | Restart | working |
 | X | working |

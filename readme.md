@@ -13,6 +13,9 @@ Because of the various and sundry complications with getting NixOS to work on th
 | Backlight brightness | working |
 | Webcam               | working |
 | Avahi                | working |
+| Lock on suspend      | not working |
+
+Suspend/Resume sometimes fails. It appears to fail in the suspend step, in that the screen remains on, the laptop remains on, but the system remains unresponsive.
 
 ## Hardware
 

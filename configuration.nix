@@ -28,6 +28,15 @@
   networking.interfaces.enp3s0f0.useDHCP = true;
   networking.interfaces.wlp1s0.useDHCP = true;
 
+  services.avahi = {
+    enable = true;
+    nssmdns = true;
+    publish.addresses = true;
+    publish.domain = true;
+  };
+
+  services.dbus.packages = [ pkgs.gnome3.dconf ];
+
   # Configure network proxy if necessary
   # networking.proxy.default = "http://user:password@proxy:port/";
   # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
@@ -74,7 +83,6 @@
   hardware.pulseaudio.enable = true;
 
   # Enable the X11 windowing system.
-
   services.xserver = {
     enable = true;
     layout = "dvorak";

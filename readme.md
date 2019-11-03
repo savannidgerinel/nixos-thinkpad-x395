@@ -6,12 +6,13 @@ Because of the various and sundry complications with getting NixOS to work on th
 
 | Feature              | Status  |
 | -------------------- | ------- |
-| Suspend/Resume       | working |
+| Suspend/Resume       | working (most of the time) |
 | Restart              | working |
 | X                    | working |
 | Sound                | working |
 | Backlight brightness | working |
 | Webcam               | working |
+| Avahi                | working |
 
 ## Hardware
 

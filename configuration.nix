@@ -16,7 +16,7 @@
   boot.kernelParams = [ "acpi_backlight=none" ];
   boot.kernelPackages = pkgs.linuxPackages_latest;
   boot.kernelModules = [ "kvm-amd" ];
-  boot.extraModulePackages = with config.boot.kernelPackages; [ ];
+  boot.extraModulePackages = with config.boot.kernelPackages; [ pkgs.linuxPackages_latest.acpi_call ];
 
   networking.hostName = "garnet"; # Define your hostname.
   networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
@@ -48,6 +48,7 @@
     defaultLocale = "en_US.UTF-8";
   };
 
+  # System-udev-settle never succeeds, so this effectively disables it
   systemd.services.systemd-udev-settle.serviceConfig.ExecStart = ["" "${pkgs.coreutils}/bin/true"];
 
   # Set your time zone.
@@ -56,7 +57,7 @@
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
-    wget vim lynx powertop
+    wget vim lynx powertop xscreensaver
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
@@ -67,7 +68,10 @@
   # List services that you want to enable:
 
   # Enable the OpenSSH daemon.
-  # services.openssh.enable = true;
+  services.openssh = {
+    enable = true;
+    allowSFTP = true;
+  };
 
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];
@@ -98,16 +102,10 @@
     libinput.tapping = false;
   };
 
-  # services.xserver.enable = true;
-  # services.xserver.layout = "dvorak";
-  # services.xserver.xkbOptions = "eurosign:e";
-
-  # Enable touchpad support.
-  # services.xserver.libinput.enable = true;
-
-  # Enable the KDE Desktop Environment.
-  # services.xserver.displayManager.sddm.enable = true;
-  # services.xserver.desktopManager.plasma5.enable = true;
+  programs.xss-lock = {
+    enable = true;
+    lockerCommand = "/run/current-system/sw/bin/xscreensaver-command -lock";
+  };
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.savanni = {
@@ -121,6 +119,7 @@
   # should.
   system.stateVersion = "19.09"; # Did you read the comment?
 
+  # Enable backlight management
   programs.light.enable = true;
   services.actkbd = {
     enable = true;

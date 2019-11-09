@@ -6,7 +6,7 @@ Because of the various and sundry complications with getting NixOS to work on th
 
 | Feature              | Status  |
 | -------------------- | ------- |
-| Suspend/Resume       | working (most of the time) |
+| Suspend/Resume       | rarely working |
 | Restart              | working |
 | X                    | working |
 | Sound                | working |
@@ -14,6 +14,7 @@ Because of the various and sundry complications with getting NixOS to work on th
 | Webcam               | working |
 | Avahi                | working |
 | Lock on suspend      | not working |
+| Disable Root user    | no      |
 
 Suspend/Resume sometimes fails. It appears to fail in the suspend step, in that the screen remains on, the laptop remains on, but the system remains unresponsive.
 

@@ -100,6 +100,14 @@
 
     libinput.enable = true;
     libinput.tapping = false;
+
+    config = ''
+      Section "InputClass"
+        Identifier "ErgoDox EZ"
+        MatchProduct "ErgoDox EZ ErgoDox EZ"
+        Option "XkbLayout" "us"
+      EndSection
+    '';
   };
 
   programs.xss-lock = {

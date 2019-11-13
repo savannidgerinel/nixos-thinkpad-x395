@@ -13,7 +13,7 @@
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
-  boot.kernelParams = [ "acpi_backlight=none" ];
+  boot.kernelParams = [ "acpi_osi=Linux" "acpi_backlight=none" ];
   boot.kernelPackages = pkgs.linuxPackages_latest;
   boot.kernelModules = [ "kvm-amd" ];
   boot.extraModulePackages = with config.boot.kernelPackages; [ pkgs.linuxPackages_latest.acpi_call ];
@@ -25,7 +25,7 @@
   # Per-interface useDHCP will be mandatory in the future, so this generated config
   # replicates the default behaviour.
   networking.useDHCP = false;
-  networking.interfaces.enp3s0f0.useDHCP = true;
+  networking.interfaces.enp3s0f0.useDHCP = false;
   networking.interfaces.wlp1s0.useDHCP = true;
 
   services.avahi = {
@@ -108,11 +108,6 @@
         Option "XkbLayout" "us"
       EndSection
     '';
-  };
-
-  programs.xss-lock = {
-    enable = true;
-    lockerCommand = "/run/current-system/sw/bin/xscreensaver-command -lock";
   };
 
   # Define a user account. Don't forget to set a password with ‘passwd’.

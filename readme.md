@@ -6,14 +6,14 @@ Because of the various and sundry complications with getting NixOS to work on th
 
 | Feature              | Status  |
 | -------------------- | ------- |
-| Suspend/Resume       | rarely working |
+| Suspend/Resume       | usually working |
 | Restart              | working |
 | X                    | working |
 | Sound                | working |
 | Backlight brightness | working |
 | Webcam               | working |
 | Avahi                | working |
-| Lock on suspend      | not working |
+| Lock on suspend      | delegated to user space |
 | Disable Root user    | no      |
 
 Suspend/Resume sometimes fails. It appears to fail in the suspend step, in that the screen remains on, the laptop remains on, but the system remains unresponsive.
@@ -22,7 +22,7 @@ Suspend/Resume sometimes fails. It appears to fail in the suspend step, in that 
 
 * Ryzen 7 PRO 3700U 2.3G
 * 16GB DDR4 2666
-* Graphics: ???
+* Graphics: Radeon Mobile Vega Gfx (processor integrated)
 * Wireless: Intel 9260
 * Storage: 1TB M.2 2280 NVMe
 

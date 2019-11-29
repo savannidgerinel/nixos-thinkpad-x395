@@ -33,3 +33,9 @@ Graham Christensen for introducing me to NixOS originally.
 
 adisbladis in the #nixos-chat channel for pointing me to the correct kernel and for providing an install image.
 
+## Others
+
+I keep other Nix repositories for other parts of my environment
+
+* [My Nix shell environment](https://github.com/savannidgerinel/nix-shell)
+* [Derivations for Luminescent Dreams software](https://github.com/luminescent-dreams/luminescent-dreams-nixpkgs)

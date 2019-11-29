@@ -4,17 +4,18 @@ Because of the various and sundry complications with getting NixOS to work on th
 
 **Be sure to disable secure boot. NixOS cannot boot with secure boot mode enabled in UEFI**
 
-| Feature              | Status  |
-| -------------------- | ------- |
-| Suspend/Resume       | usually working |
-| Restart              | working |
-| X                    | working |
-| Sound                | working |
-| Backlight brightness | working |
-| Webcam               | working |
-| Avahi                | working |
-| Lock on suspend      | delegated to user space |
-| Disable Root user    | no      |
+| Feature                       | Status                  |
+| ----------------------------- | ----------------------- |
+| Suspend/Resume                | sometimes working       |
+| Restart                       | working                 |
+| X                             | working                 |
+| volume management with Thunar | working                 |
+| Sound                         | working                 |
+| Backlight brightness          | working                 |
+| Webcam                        | working                 |
+| Avahi                         | working                 |
+| Lock on suspend               | delegated to user space |
+| Disable Root user             | no                      |
 
 Suspend/Resume sometimes fails. It appears to fail in the suspend step, in that the screen remains on, the laptop remains on, but the system remains unresponsive.
 

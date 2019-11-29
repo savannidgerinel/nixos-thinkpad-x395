@@ -16,7 +16,11 @@
   boot.kernelParams = [ "acpi_osi=Linux" "acpi_backlight=none" ];
   boot.kernelPackages = pkgs.linuxPackages_latest;
   boot.kernelModules = [ "kvm-amd" ];
+  boot.blacklistedKernelModules = [ "bluetooth" ];
   boot.extraModulePackages = with config.boot.kernelPackages; [ pkgs.linuxPackages_latest.acpi_call ];
+  # boot.extraModprobeConfig = ''
+  #   options iwlwifi 11n_disable=1 swcrypto=1
+  # '';
 
   networking.hostName = "garnet"; # Define your hostname.
   networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
@@ -85,14 +89,18 @@
   # Enable sound.
   sound.enable = true;
   hardware.pulseaudio.enable = true;
+  hardware.opengl.driSupport32Bit = true;
 
   # Enable the X11 windowing system.
   services.xserver = {
     enable = true;
     layout = "dvorak";
 
+    wacom.enable = true;
+
     displayManager.auto.enable = true;
     displayManager.auto.user = "savanni";
+    desktopManager.xfce.enable = true;
     windowManager.i3.enable = true;
     windowManager.default = "i3";
 
@@ -129,7 +137,11 @@
     bindings = [
       { keys = [ 225 ]; events = [ "key" ]; command = "/run/current-system/sw/bin/light -s sysfs/backlight/amdgpu_bl0 -A 10"; }
       { keys = [ 224 ]; events = [ "key" ]; command = "/run/current-system/sw/bin/light -s sysfs/backlight/amdgpu_bl0 -U 10"; }
+      # This one is supposed to be catching the F7/monitor switch key, but I don't see any indication that it's running the monitor switch command.
+      # { keys = [ 227 ]; events = [ "key" ]; command = "/home/savanni/monitor-switch.sh"; }
     ];
   };
+
+  services.fwupd.enable = true;
 }
 

@@ -10,14 +10,19 @@
       ./hardware-configuration.nix
     ];
 
+  nixpkgs.config.allowUnfree = true;
+
+  hardware.cpu.amd.updateMicrocode = true;
+  hardware.enableAllFirmware = true;
+
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
-  boot.kernelParams = [ "acpi_osi=Linux" "acpi_backlight=none" ];
+  boot.kernelParams = [ "acpi_osi=Linux" "acpi_backlight=none" "processor.max_cstate=4" "iommu=soft" "idle=nomwait" ];
   boot.kernelPackages = pkgs.linuxPackages_latest;
-  boot.kernelModules = [ "kvm-amd" ];
+  # boot.kernelModules = [ "kvm-amd" ];
   boot.blacklistedKernelModules = [ "bluetooth" ];
-  boot.extraModulePackages = with config.boot.kernelPackages; [ pkgs.linuxPackages_latest.acpi_call ];
+  boot.extraModulePackages = with config.boot.kernelPackages; [ acpi_call ];
   # boot.extraModprobeConfig = ''
   #   options iwlwifi 11n_disable=1 swcrypto=1
   # '';
@@ -84,11 +89,15 @@
   # networking.firewall.enable = false;
 
   # Enable CUPS to print documents.
-  # services.printing.enable = true;
+  services.printing = {
+    enable = true;
+    drivers = [ pkgs.samsungUnifiedLinuxDriver ];
+  };
 
   # Enable sound.
   sound.enable = true;
   hardware.pulseaudio.enable = true;
+
   hardware.opengl.driSupport32Bit = true;
 
   # Enable the X11 windowing system.

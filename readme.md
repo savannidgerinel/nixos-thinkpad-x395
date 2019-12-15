@@ -6,7 +6,7 @@ Because of the various and sundry complications with getting NixOS to work on th
 
 | Feature                       | Status                  |
 | ----------------------------- | ----------------------- |
-| Suspend/Resume                | sometimes working       |
+| Suspend/Resume                | working                 |
 | Restart                       | working                 |
 | X                             | working                 |
 | volume management with Thunar | working                 |
@@ -17,7 +17,7 @@ Because of the various and sundry complications with getting NixOS to work on th
 | Lock on suspend               | delegated to user space |
 | Disable Root user             | no                      |
 
-Suspend/Resume sometimes fails. It appears to fail in the suspend step, in that the screen remains on, the laptop remains on, but the system remains unresponsive.
+Suspend/Resume now works. I had to set "iommu=soft" and "idle=nomwait" on the kernel parameters. "idle=nomwait" seems to be the magic one that made it all work, while "iommu=soft" fixed a different problem that I was seeing during boot time, but which may have influenced things.
 
 ## Hardware
 
@@ -39,3 +39,4 @@ I keep other Nix repositories for other parts of my environment
 
 * [My Nix shell environment](https://github.com/savannidgerinel/nix-shell)
 * [Derivations for Luminescent Dreams software](https://github.com/luminescent-dreams/luminescent-dreams-nixpkgs)
+* [How to safely use nginx for localhost-only services](https://unix.stackexchange.com/questions/363254/how-can-i-enable-nginx-on-nixos-for-localhost-only)

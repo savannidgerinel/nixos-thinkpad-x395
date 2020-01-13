@@ -66,7 +66,7 @@
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
-    wget vim lynx powertop xscreensaver
+    wget vim lynx powertop xscreensaver xkbset xorg.xmodmap
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
@@ -107,8 +107,10 @@
 
     wacom.enable = true;
 
-    displayManager.auto.enable = true;
-    displayManager.auto.user = "savanni";
+    displayManager = {
+      auto.enable = true;
+      auto.user = "savanni";
+    };
     desktopManager.xfce.enable = true;
     windowManager.i3.enable = true;
     windowManager.default = "i3";
@@ -121,7 +123,9 @@
     config = ''
       Section "InputClass"
         Identifier "ErgoDox EZ"
-        MatchProduct "ErgoDox EZ ErgoDox EZ"
+        MatchVendor "ZSA"
+        MatchProduct "ZSA Ergodox EZ"
+        MatchIsKeyboard "true"
         Option "XkbLayout" "us"
       EndSection
     '';

@@ -103,7 +103,7 @@
   # Enable the X11 windowing system.
   services.xserver = {
     enable = true;
-    layout = "dvorak";
+    layout = "us";
 
     wacom.enable = true;
 
@@ -122,11 +122,18 @@
 
     config = ''
       Section "InputClass"
+        Identifier "built-in keyboard"
+        MatchProduct "AT Translated Set 2 keyboard"
+        Option "XkbLayout" "dvorak"
+        Option "XkbOptions" "esperanto:dvorak,lv3:ralt_switch"
+      EndSection
+
+      Section "InputClass"
         Identifier "ErgoDox EZ"
         MatchVendor "ZSA"
         MatchProduct "ZSA Ergodox EZ"
-        MatchIsKeyboard "true"
         Option "XkbLayout" "us"
+        Option "XkbOptions" "esperanto:qwerty,lv3:ralt_switch"
       EndSection
     '';
   };

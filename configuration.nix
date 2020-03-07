@@ -4,7 +4,18 @@
 
 { config, pkgs, ... }:
 
-{
+let
+  before-sleep = pkgs.writeScript "before-sleep" ''
+    #!${pkgs.bash}/bin/bash
+    /run/current-system/sw/bin/rmmod iwlmvm iwlwifi
+    '';
+
+  after-wakeup = pkgs.writeScript "after-wakeup" ''
+    #!${pkgs.bash}/bin/bash
+    /run/current-system/sw/bin/modprobe iwlmvm
+    /run/current-system/sw/bin/systemctl restart wpa_supplicant
+    '';
+in {
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
@@ -28,7 +39,6 @@
   # '';
 
   networking.hostName = "garnet"; # Define your hostname.
-  networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
   # The global useDHCP flag is deprecated, therefore explicitly set to false here.
   # Per-interface useDHCP will be mandatory in the future, so this generated config
@@ -59,9 +69,29 @@
 
   # System-udev-settle never succeeds, so this effectively disables it
   systemd.services.systemd-udev-settle.serviceConfig.ExecStart = ["" "${pkgs.coreutils}/bin/true"];
+  systemd.services.before-sleep = {
+    description = "Remove network services before sleep";
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${before-sleep}";
+    };
+    wantedBy = [ "sleep.target" ];
+    before = [ "sleep.target" ];
+  };
+
+  systemd.services.after-wakeup = {
+    description = "Remove network services after sleep";
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${after-wakeup}";
+    };
+    wantedBy = [ "sleep.target" ];
+    after = [ "suspend.target" "hibernate.target" "hybrid-sleep.target" ];
+  };
 
   # Set your time zone.
   time.timeZone = "America/New_York";
+  # time.timeZone = "America/Denver";
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
@@ -108,8 +138,11 @@
     wacom.enable = true;
 
     displayManager = {
-      auto.enable = true;
-      auto.user = "savanni";
+      lightdm = {
+        enable = true;
+        autoLogin.enable = true;
+        autoLogin.user = "savanni";
+      };
     };
     desktopManager.xfce.enable = true;
     windowManager.i3.enable = true;
@@ -125,7 +158,7 @@
         Identifier "built-in keyboard"
         MatchProduct "AT Translated Set 2 keyboard"
         Option "XkbLayout" "dvorak"
-        Option "XkbOptions" "esperanto:dvorak,lv3:ralt_switch"
+        Option "XkbOptions" "esperanto:dvorak,lv3:caps_switch"
       EndSection
 
       Section "InputClass"
@@ -133,7 +166,7 @@
         MatchVendor "ZSA"
         MatchProduct "ZSA Ergodox EZ"
         Option "XkbLayout" "us"
-        Option "XkbOptions" "esperanto:qwerty,lv3:ralt_switch"
+        Option "XkbOptions" "esperanto:qwerty,lv3:caps_switch"
       EndSection
     '';
   };
@@ -141,7 +174,7 @@
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.savanni = {
     isNormalUser = true;
-    extraGroups = [ "audio" "wheel" ]; # Enable ‘sudo’ for the user.
+    extraGroups = [ "audio" "docker" "wheel" ];
   };
 
   # This value determines the NixOS release with which your system is to be
@@ -163,5 +196,7 @@
   };
 
   services.fwupd.enable = true;
+
+  virtualisation.docker.enable = true;
 }
 

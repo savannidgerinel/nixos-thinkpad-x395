@@ -30,10 +30,10 @@ in {
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
-  boot.kernelParams = [ "acpi_osi=Linux" "acpi_backlight=none" "processor.max_cstate=4" "iommu=soft" "idle=nomwait" ];
+  boot.kernelParams = [ "acpi_osi=Linux" "acpi_backlight=none" "processor.max_cstate=4" "iommu=soft" "idle=nomwait" "irqpoll" ];
   boot.kernelPackages = pkgs.linuxPackages_latest;
   # boot.kernelModules = [ "kvm-amd" ];
-  boot.blacklistedKernelModules = [ "bluetooth" ];
+  boot.blacklistedKernelModules = [ "btusb" ];
   boot.extraModulePackages = with config.boot.kernelPackages; [ acpi_call ];
   # boot.extraModprobeConfig = ''
   #   options iwlwifi 11n_disable=1 swcrypto=1

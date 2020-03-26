@@ -7,6 +7,7 @@
 let
   before-sleep = pkgs.writeScript "before-sleep" ''
     #!${pkgs.bash}/bin/bash
+    /run/current-system/sw/bin/systemctl stop wpa_supplicant
     /run/current-system/sw/bin/rmmod iwlmvm iwlwifi
     '';
 

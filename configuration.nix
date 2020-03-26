@@ -176,6 +176,10 @@ in {
         Option "XkbLayout" "us"
         Option "XkbOptions" "esperanto:qwerty,lv3:caps_switch"
       EndSection
+
+      Section "Extensions"
+          Option "Composite" "Disable"
+      EndSection
     '';
   };
 

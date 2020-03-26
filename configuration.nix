@@ -40,6 +40,13 @@ in {
   # '';
 
   networking.hostName = "garnet"; # Define your hostname.
+  networking.wireless = {
+    enable = true;
+    extraConfig = ''
+      ctrl_interface=/run/wpa_supplicant
+      ctrl_interface_group=wheel
+    '';
+  };
 
   # The global useDHCP flag is deprecated, therefore explicitly set to false here.
   # Per-interface useDHCP will be mandatory in the future, so this generated config

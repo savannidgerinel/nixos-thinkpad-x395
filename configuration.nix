@@ -101,12 +101,6 @@ in {
   time.timeZone = "America/New_York";
   # time.timeZone = "America/Denver";
 
-  # List packages installed in system profile. To search, run:
-  # $ nix search wget
-  environment.systemPackages = with pkgs; [
-    wget vim lynx powertop xscreensaver xkbset xorg.xmodmap
-  ];
-
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
   # programs.mtr.enable = true;
@@ -136,7 +130,10 @@ in {
   sound.enable = true;
   hardware.pulseaudio.enable = true;
 
-  hardware.opengl.driSupport32Bit = true;
+  hardware.opengl = {
+    enable = true;
+    driSupport32Bit = true;
+  };
 
   # Enable the X11 windowing system.
   services.xserver = {
@@ -210,5 +207,21 @@ in {
   services.fwupd.enable = true;
 
   virtualisation.docker.enable = true;
+
+  # List packages installed in system profile. To search, run:
+  # $ nix search wget
+  environment.systemPackages = with pkgs; [
+    wget
+    vim
+    lynx
+    powertop
+    xscreensaver
+    xkbset
+    xorg.xmodmap
+    wpa_supplicant_gui
+    cudatoolkit
+    firefox
+    zoom-us
+  ];
 }
 

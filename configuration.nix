@@ -5,17 +5,7 @@
 { config, pkgs, ... }:
 
 let
-  before-sleep = pkgs.writeScript "before-sleep" ''
-    #!${pkgs.bash}/bin/bash
-    /run/current-system/sw/bin/systemctl stop wpa_supplicant
-    /run/current-system/sw/bin/rmmod iwlmvm iwlwifi
-    '';
 
-  after-wakeup = pkgs.writeScript "after-wakeup" ''
-    #!${pkgs.bash}/bin/bash
-    /run/current-system/sw/bin/modprobe iwlmvm
-    /run/current-system/sw/bin/systemctl restart wpa_supplicant
-    '';
 in {
   imports =
     [ # Include the results of the hardware scan.
@@ -77,25 +67,6 @@ in {
 
   # System-udev-settle never succeeds, so this effectively disables it
   systemd.services.systemd-udev-settle.serviceConfig.ExecStart = ["" "${pkgs.coreutils}/bin/true"];
-  systemd.services.before-sleep = {
-    description = "Remove network services before sleep";
-    serviceConfig = {
-      Type = "oneshot";
-      ExecStart = "${before-sleep}";
-    };
-    wantedBy = [ "sleep.target" ];
-    before = [ "sleep.target" ];
-  };
-
-  systemd.services.after-wakeup = {
-    description = "Remove network services after sleep";
-    serviceConfig = {
-      Type = "oneshot";
-      ExecStart = "${after-wakeup}";
-    };
-    wantedBy = [ "sleep.target" ];
-    after = [ "suspend.target" "hibernate.target" "hybrid-sleep.target" ];
-  };
 
   # Set your time zone.
   time.timeZone = "America/New_York";

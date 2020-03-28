@@ -5,6 +5,10 @@
 { config, pkgs, ... }:
 
 let
+  nixpkgsUnstableSmall = builtins.fetchTarball {
+    url = https://nixos.org/channels/nixos-unstable-small/nixexprs.tar.xz;
+  };
+  pkgsUnstableSmall = import nixpkgsUnstableSmall {};
 
 in {
   imports =
@@ -20,8 +24,8 @@ in {
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
-  boot.kernelParams = [ "acpi_osi=Linux" "acpi_backlight=none" "processor.max_cstate=4" "iommu=soft" "idle=nomwait" "irqpoll" ];
-  boot.kernelPackages = pkgs.linuxPackages_latest;
+  boot.kernelParams = [ "acpi_osi=Linux" "acpi_backlight=none" "processor.max_cstate=4" "amd_iommu=off" "idle=nomwait" "initcall_debug" ];
+  boot.kernelPackages = pkgsUnstableSmall.linuxPackages_latest;
   # boot.kernelModules = [ "kvm-amd" ];
   boot.blacklistedKernelModules = [ "btusb" ];
   boot.extraModulePackages = with config.boot.kernelPackages; [ acpi_call ];

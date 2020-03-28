@@ -24,6 +24,7 @@ in {
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
+  # Debugging suspend/resume issues: https://bbs.archlinux.org/viewtopic.php?id=248278
   boot.kernelParams = [ "acpi_osi=Linux" "acpi_backlight=none" "processor.max_cstate=4" "amd_iommu=off" "idle=nomwait" "initcall_debug" ];
   boot.kernelPackages = pkgsUnstableSmall.linuxPackages_latest;
   # boot.kernelModules = [ "kvm-amd" ];
@@ -149,8 +150,11 @@ in {
         Option "XkbOptions" "esperanto:qwerty,lv3:caps_switch"
       EndSection
 
-      Section "Extensions"
-          Option "Composite" "Disable"
+      # https://bbs.archlinux.org/viewtopic.php?pid=1874850#p1874850
+      Section "Device"
+        Identifier "AMDGPU"
+        Driver "amdgpu"
+        Option "DRI" "2"
       EndSection
     '';
   };

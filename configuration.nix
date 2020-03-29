@@ -5,6 +5,16 @@
 { config, pkgs, ... }:
 
 let
+  before-sleep = pkgs.writeScript "before-sleep" ''
+    #!${pkgs.bash}/bin/bash
+    ${pkgs.python3}/bin/python /home/savanni/src/ZenStates-Linux/zenstates.py -l
+    ${pkgs.python3}/bin/python /home/savanni/src/ZenStates-Linux/zenstates.py --c6-disable
+  '';
+  after-wakeup = pkgs.writeScript "after-wakeup" ''
+    #!${pkgs.bash}/bin/bash
+    ${pkgs.python3}/bin/python /home/savanni/src/ZenStates-Linux/zenstates.py -l
+    ${pkgs.python3}/bin/python /home/savanni/src/ZenStates-Linux/zenstates.py --c6-disable
+  '';
   nixpkgsUnstableSmall = builtins.fetchTarball {
     url = https://nixos.org/channels/nixos-unstable-small/nixexprs.tar.xz;
   };
@@ -183,6 +193,26 @@ in {
     ];
   };
 
+  systemd.services.before-sleep = {
+    description = "Remove network services before sleep";
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${before-sleep}";
+    };
+    wantedBy = [ "sleep.target" ];
+    before = [ "sleep.target" ];
+  };
+
+  systemd.services.after-wakeup = {
+    description = "Remove network services after sleep";
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${after-wakeup}";
+    };
+    wantedBy = [ "sleep.target" ];
+    after = [ "suspend.target" "hibernate.target" "hybrid-sleep.target" ];
+  };
+
   services.fwupd.enable = true;
 
   virtualisation.docker.enable = true;
@@ -201,6 +231,7 @@ in {
     cudatoolkit
     firefox
     zoom-us
+    python3
   ];
 }
 

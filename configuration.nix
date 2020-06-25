@@ -5,20 +5,18 @@
 { config, pkgs, ... }:
 
 let
+  nixpkgsLocal = import /home/savanni/src/nixpkgs {};
   before-sleep = pkgs.writeScript "before-sleep" ''
     #!${pkgs.bash}/bin/bash
-    ${pkgs.python3}/bin/python /home/savanni/src/ZenStates-Linux/zenstates.py -l
-    ${pkgs.python3}/bin/python /home/savanni/src/ZenStates-Linux/zenstates.py --c6-disable
-  '';
-  after-wakeup = pkgs.writeScript "after-wakeup" ''
-    #!${pkgs.bash}/bin/bash
-    ${pkgs.python3}/bin/python /home/savanni/src/ZenStates-Linux/zenstates.py -l
-    ${pkgs.python3}/bin/python /home/savanni/src/ZenStates-Linux/zenstates.py --c6-disable
+    ${nixpkgsLocal.zenstates}/bin/zenstates --c6-disable
   '';
   nixpkgsUnstableSmall = builtins.fetchTarball {
     url = https://nixos.org/channels/nixos-unstable-small/nixexprs.tar.xz;
   };
   pkgsUnstableSmall = import nixpkgsUnstableSmall {};
+  unstable = import <unstable> {
+    config = { allowUnfree = true; };
+  };
 
 in {
   imports =
@@ -38,27 +36,29 @@ in {
   boot.kernelParams = [ "acpi_osi=Linux" "acpi_backlight=none" "processor.max_cstate=4" "amd_iommu=off" "idle=nomwait" "initcall_debug" ];
   boot.kernelPackages = pkgsUnstableSmall.linuxPackages_latest;
   # boot.kernelModules = [ "kvm-amd" ];
+  boot.kernelModules = [ "kvm-amd" "msr" ];
   boot.blacklistedKernelModules = [ "btusb" ];
-  boot.extraModulePackages = with config.boot.kernelPackages; [ acpi_call ];
+  # boot.extraModulePackages = with config.boot.kernelPackages; [ acpi_call ];
   # boot.extraModprobeConfig = ''
-  #   options iwlwifi 11n_disable=1 swcrypto=1
+  #   options iwlwifi 11n_disable=1
   # '';
 
   networking.hostName = "garnet"; # Define your hostname.
-  networking.wireless = {
-    enable = true;
-    extraConfig = ''
-      ctrl_interface=/run/wpa_supplicant
-      ctrl_interface_group=wheel
-    '';
-  };
+  networking.wicd.enable = true;
+  # networking.wireless = {
+  #   enable = true;
+  #   extraConfig = ''
+  #     ctrl_interface=/run/wpa_supplicant
+  #     ctrl_interface_group=wheel
+  #   '';
+  # };
 
   # The global useDHCP flag is deprecated, therefore explicitly set to false here.
   # Per-interface useDHCP will be mandatory in the future, so this generated config
   # replicates the default behaviour.
   networking.useDHCP = false;
   networking.interfaces.enp3s0f0.useDHCP = false;
-  networking.interfaces.wlp1s0.useDHCP = true;
+  networking.interfaces.wlp1s0.useDHCP = false;
 
   services.avahi = {
     enable = true;
@@ -82,6 +82,8 @@ in {
 
   # System-udev-settle never succeeds, so this effectively disables it
   systemd.services.systemd-udev-settle.serviceConfig.ExecStart = ["" "${pkgs.coreutils}/bin/true"];
+  services.udev.packages = [ pkgs.yubikey-personalization pkgs.libu2f-host ];
+  services.pcscd.enable = true;
 
   # Set your time zone.
   time.timeZone = "America/New_York";
@@ -91,6 +93,11 @@ in {
   # started in user sessions.
   # programs.mtr.enable = true;
   # programs.gnupg.agent = { enable = true; enableSSHSupport = true; };
+  programs.gnupg = {
+    agent.enable = true;
+    agent.pinentryFlavor = "gnome3";
+    agent.enableSSHSupport = true;
+  };
 
   # List services that you want to enable:
 
@@ -101,7 +108,7 @@ in {
   };
 
   # Open ports in the firewall.
-  # networking.firewall.allowedTCPPorts = [ ... ];
+  networking.firewall.allowedTCPPorts = [ 3000 ];
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
@@ -172,7 +179,7 @@ in {
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.savanni = {
     isNormalUser = true;
-    extraGroups = [ "audio" "docker" "wheel" ];
+    extraGroups = [ "audio" "docker" "wheel" "vboxusers" ];
   };
 
   # This value determines the NixOS release with which your system is to be
@@ -194,7 +201,7 @@ in {
   };
 
   systemd.services.before-sleep = {
-    description = "Remove network services before sleep";
+    description = "Jobs to run before going to sleep";
     serviceConfig = {
       Type = "oneshot";
       ExecStart = "${before-sleep}";
@@ -203,35 +210,69 @@ in {
     before = [ "sleep.target" ];
   };
 
-  systemd.services.after-wakeup = {
-    description = "Remove network services after sleep";
-    serviceConfig = {
-      Type = "oneshot";
-      ExecStart = "${after-wakeup}";
-    };
-    wantedBy = [ "sleep.target" ];
-    after = [ "suspend.target" "hibernate.target" "hybrid-sleep.target" ];
-  };
-
   services.fwupd.enable = true;
 
-  virtualisation.docker.enable = true;
+  virtualisation = {
+    docker.enable = true;
+
+    virtualbox.host = {
+      enable = true;
+      enableExtensionPack = true;
+    };
+  };
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
-    wget
-    vim
-    lynx
-    powertop
-    xscreensaver
-    xkbset
-    xorg.xmodmap
-    wpa_supplicant_gui
     cudatoolkit
     firefox
-    zoom-us
+    gnupg
+    gst_all_1.gst-plugins-bad
+    gst_all_1.gst-plugins-base
+    gst_all_1.gst-plugins-good
+    gst_all_1.gst-plugins-ugly
+    gstreamer
+    libGL_driver
+    libreoffice
+    lynx
+    mesa
+    nixpkgsLocal.zenstates
+    pinentry_gnome
+    powertop
     python3
+    slack
+    unstable.zoom-us
+    vim
+    wget
+    wicd
+    wpa_supplicant_gui
+    xfce4-14.thunar
+    xfce4-14.thunar-volman
+    xfce4-14.xfce4-terminal
+    xkbset
+    xorg.xmodmap
+    xscreensaver
   ];
+
+  # environment.shellInit = ''
+  #   export GPG_TTY="$(tty)"
+  #   gpg-connect-agent /bye
+  #   export SSH_AUTH_SOCK="/run/user/$UID/gnupg/S.gpg-agent.ssh"
+  # '';
+
+  # programs.ssh {
+  #   ssh.startAgent = false;
+  #   gnupg.agent = {
+  #     enable = true;
+  #     enableSSHSupport = true;
+  #   };
+  # };
+
+  hardware.bluetooth = {
+    enable = true;
+    package = pkgs.bluezFull;
+  };
+
+  systemd.coredump.enable = false;
 }
 

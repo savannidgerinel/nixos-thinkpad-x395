@@ -36,8 +36,8 @@ in {
   boot.kernelParams = [ "acpi_osi=Linux" "acpi_backlight=none" "processor.max_cstate=4" "amd_iommu=off" "idle=nomwait" "initcall_debug" ];
   boot.kernelPackages = pkgsUnstableSmall.linuxPackages_latest;
   # boot.kernelModules = [ "kvm-amd" ];
-  boot.kernelModules = [ "kvm-amd" "msr" ];
-  boot.blacklistedKernelModules = [ "btusb" ];
+  boot.kernelModules = [ "fuse" "kvm-amd" "msr" "kvm-intel" ];
+  # boot.blacklistedKernelModules = [ "btusb" ];
   # boot.extraModulePackages = with config.boot.kernelPackages; [ acpi_call ];
   # boot.extraModprobeConfig = ''
   #   options iwlwifi 11n_disable=1
@@ -75,9 +75,12 @@ in {
 
   # Select internationalisation properties.
   i18n = {
-    consoleFont = "Lat2-Terminus16";
-    consoleKeyMap = "dvorak";
     defaultLocale = "en_US.UTF-8";
+  };
+
+  console = {
+    font = "Lat2-Terminus16";
+    keyMap = "dvorak";
   };
 
   # System-udev-settle never succeeds, so this effectively disables it
@@ -121,7 +124,14 @@ in {
 
   # Enable sound.
   sound.enable = true;
-  hardware.pulseaudio.enable = true;
+  hardware.pulseaudio = {
+    enable = true;
+    extraModules = [ pkgs.pulseaudio-modules-bt ];
+    extraConfig = ''
+      load-module module-switch-on-connect
+    '';
+    package = pkgs.pulseaudioFull;
+  };
 
   hardware.opengl = {
     enable = true;
@@ -141,10 +151,11 @@ in {
         autoLogin.enable = true;
         autoLogin.user = "savanni";
       };
+      defaultSession = "none+i3";
     };
     desktopManager.xfce.enable = true;
     windowManager.i3.enable = true;
-    windowManager.default = "i3";
+    # windowManager.default = "i3";
 
     videoDrivers = [ "amdgpu" ];
 
@@ -215,10 +226,12 @@ in {
   virtualisation = {
     docker.enable = true;
 
-    virtualbox.host = {
-      enable = true;
-      enableExtensionPack = true;
-    };
+    # virtualbox.host = {
+    #   enable = true;
+    #   enableExtensionPack = true;
+    # };
+
+    libvirtd.enable = true;
   };
 
   # List packages installed in system profile. To search, run:
@@ -239,7 +252,7 @@ in {
     nixpkgsLocal.zenstates
     pinentry_gnome
     powertop
-    python3
+    # python3
     slack
     unstable.zoom-us
     vim
@@ -273,6 +286,8 @@ in {
     package = pkgs.bluezFull;
   };
 
-  systemd.coredump.enable = false;
+  services.blueman.enable = true;
+
+  # systemd.coredump.enable = false;
 }
 

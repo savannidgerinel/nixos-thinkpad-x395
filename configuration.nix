@@ -34,9 +34,10 @@ in {
   boot.loader.efi.canTouchEfiVariables = true;
   # Debugging suspend/resume issues: https://bbs.archlinux.org/viewtopic.php?id=248278
   boot.kernelParams = [ "acpi_osi=Linux" "acpi_backlight=none" "processor.max_cstate=4" "amd_iommu=off" "idle=nomwait" "initcall_debug" ];
-  boot.kernelPackages = pkgsUnstableSmall.linuxPackages_latest;
+  # boot.kernelPackages = pkgsUnstableSmall.linuxPackages_latest;
+  boot.kernelPackages = pkgs.linuxPackages_latest;
   # boot.kernelModules = [ "kvm-amd" ];
-  boot.kernelModules = [ "fuse" "kvm-amd" "msr" "kvm-intel" ];
+  boot.kernelModules = [ "fuse" "kvm-amd" "msr" "kvm-intel" "amdgpu" ];
   # boot.blacklistedKernelModules = [ "btusb" ];
   # boot.extraModulePackages = with config.boot.kernelPackages; [ acpi_call ];
   # boot.extraModprobeConfig = ''
@@ -44,7 +45,7 @@ in {
   # '';
 
   networking.hostName = "garnet"; # Define your hostname.
-  networking.wicd.enable = true;
+  # networking.wicd.enable = true;
   # networking.wireless = {
   #   enable = true;
   #   extraConfig = ''
@@ -75,7 +76,7 @@ in {
 
   # Select internationalisation properties.
   i18n = {
-    defaultLocale = "en_US.UTF-8";
+    defaultLocale = "eo.UTF-8";
   };
 
   console = {
@@ -85,7 +86,17 @@ in {
 
   # System-udev-settle never succeeds, so this effectively disables it
   systemd.services.systemd-udev-settle.serviceConfig.ExecStart = ["" "${pkgs.coreutils}/bin/true"];
-  services.udev.packages = [ pkgs.yubikey-personalization pkgs.libu2f-host ];
+  services.udev = {
+    packages = [ pkgs.yubikey-personalization pkgs.libu2f-host ];
+    extraRules = ''
+      ACTION=="add", KERNEL=="ttyUSB0", MODE="0660", GROUP="dialout"
+      SUBSYSTEM=="usb", ATTRS{product}=="USBtiny", ATTRS{idProduct}=="0c9f", ATTRS{idVendor}=="1781", MODE="0660", GROUP="dialout"
+      SUBSYSTEM=="usb", ATTRS{idVendor}=="28de", MODE="0660", TAG+="uaccess"
+      KERNEL=="uinput", SUBSYSTEM=="misc", OPTIONS+="static_node=uinput", TAG+="uaccess", OPTIONS+="static_node=uinput"
+      KERNEL=="hidraw*", ATTRS{idVendor}=="28de", MODE="0660", TAG+="uaccess"
+      KERNEL=="hidraw*", KERNELS=="*28DE:*", MODE="0660", TAG+="uaccess"
+    '';
+  };
   services.pcscd.enable = true;
 
   # Set your time zone.
@@ -111,7 +122,7 @@ in {
   };
 
   # Open ports in the firewall.
-  networking.firewall.allowedTCPPorts = [ 3000 ];
+  networking.firewall.allowedTCPPorts = [ 80 ];
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
@@ -133,29 +144,49 @@ in {
     package = pkgs.pulseaudioFull;
   };
 
+  # services.pipewire = {
+  #   enable = true;
+  #   # alsa.enable = true;
+  #   # alsa.support32Bit = true;
+  #   pulse.enable = true;
+  #   # jack.enable = true;
+  # };
+
   hardware.opengl = {
     enable = true;
+    driSupport = true;
     driSupport32Bit = true;
+    extraPackages = with pkgs; [
+      unstable.rocm-opencl-icd
+      unstable.rocm-opencl-runtime
+    ];
   };
 
   # Enable the X11 windowing system.
   services.xserver = {
     enable = true;
-    layout = "us";
+    layout = "dvorak";
 
     wacom.enable = true;
 
     displayManager = {
+      # gdm.enable = true;
       lightdm = {
         enable = true;
-        autoLogin.enable = true;
-        autoLogin.user = "savanni";
+        # autoLogin.enable = true;
+        # autoLogin.user = "savanni";
       };
-      defaultSession = "none+i3";
+      defaultSession = "xfce";
     };
+    desktopManager.gnome3.enable = true;
     desktopManager.xfce.enable = true;
-    windowManager.i3.enable = true;
-    # windowManager.default = "i3";
+    windowManager.i3 = {
+      enable = true;
+      # extraSessionCommands = ''
+      #   eval $(gnome-keyring-daemon --daemonize)
+      #   export SSH_AUTH_SOCK
+      # '';
+    };
 
     videoDrivers = [ "amdgpu" ];
 
@@ -172,8 +203,7 @@ in {
 
       Section "InputClass"
         Identifier "ErgoDox EZ"
-        MatchVendor "ZSA"
-        MatchProduct "ZSA Ergodox EZ"
+        MatchProduct "ZSA Technology Labs Inc ErgoDox EZ Glow"
         Option "XkbLayout" "us"
         Option "XkbOptions" "esperanto:qwerty,lv3:caps_switch"
       EndSection
@@ -190,7 +220,7 @@ in {
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.savanni = {
     isNormalUser = true;
-    extraGroups = [ "audio" "docker" "wheel" "vboxusers" ];
+    extraGroups = [ "audio" "docker" "wheel" "dialout" "video" ];
   };
 
   # This value determines the NixOS release with which your system is to be
@@ -224,7 +254,7 @@ in {
   services.fwupd.enable = true;
 
   virtualisation = {
-    docker.enable = true;
+    # docker.enable = true;
 
     # virtualbox.host = {
     #   enable = true;
@@ -237,35 +267,16 @@ in {
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
-    cudatoolkit
-    firefox
-    gnupg
-    gst_all_1.gst-plugins-bad
-    gst_all_1.gst-plugins-base
-    gst_all_1.gst-plugins-good
-    gst_all_1.gst-plugins-ugly
-    gstreamer
-    libGL_driver
-    libreoffice
-    lynx
-    mesa
-    nixpkgsLocal.zenstates
-    pinentry_gnome
-    powertop
-    # python3
-    slack
-    unstable.zoom-us
-    vim
-    wget
-    wicd
-    wpa_supplicant_gui
-    xfce4-14.thunar
-    xfce4-14.thunar-volman
-    xfce4-14.xfce4-terminal
-    xkbset
-    xorg.xmodmap
-    xscreensaver
+    unixtools.ifconfig
+    efibootmgr
   ];
+
+  # fonts.fonts = with pkgs; [
+    # fira
+    # fira-code
+    # fira-code-symbols
+    # fira-mono
+  # ];
 
   # environment.shellInit = ''
   #   export GPG_TTY="$(tty)"
@@ -288,6 +299,31 @@ in {
 
   services.blueman.enable = true;
 
-  # systemd.coredump.enable = false;
+  systemd.coredump.enable = false;
+
+  services.plex = {
+    enable = false;
+    openFirewall = false;
+  };
+
+  services.nginx = {
+    enable = true;
+    virtualHosts."star-trek-valen.localhost" = {
+        addSSL = false;
+        enableACME = false;
+        root = "/home/savanni/Documents/star-trek-valen/public/";
+    };
+    virtualHosts."numenera.localhost" = {
+        addSSL = false;
+        enableACME = false;
+        root = "/home/savanni/Documents/numenera/public/";
+    };
+
+    virtualHosts."wiki.localhost" = {
+        addSSL = false;
+        enableACME = false;
+        root = "/home/savanni/Documents/wiki/public/";
+    };
+  };
 }
 

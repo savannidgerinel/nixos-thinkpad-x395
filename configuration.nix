@@ -162,60 +162,75 @@ in {
     ];
   };
 
-  # Enable the X11 windowing system.
-  services.xserver = {
+  programs.sway = {
     enable = true;
-    layout = "dvorak";
-
-    wacom.enable = true;
-
-    displayManager = {
-      # gdm.enable = true;
-      lightdm = {
-        enable = true;
-        # autoLogin.enable = true;
-        # autoLogin.user = "savanni";
-      };
-      defaultSession = "xfce";
-    };
-    desktopManager.gnome3.enable = true;
-    desktopManager.xfce.enable = true;
-    windowManager.i3 = {
-      enable = true;
-      # extraSessionCommands = ''
-      #   eval $(gnome-keyring-daemon --daemonize)
-      #   export SSH_AUTH_SOCK
-      # '';
-    };
-
-    videoDrivers = [ "amdgpu" ];
-
-    libinput.enable = true;
-    libinput.tapping = false;
-
-    config = ''
-      Section "InputClass"
-        Identifier "built-in keyboard"
-        MatchProduct "AT Translated Set 2 keyboard"
-        Option "XkbLayout" "dvorak"
-        Option "XkbOptions" "esperanto:dvorak,lv3:caps_switch"
-      EndSection
-
-      Section "InputClass"
-        Identifier "ErgoDox EZ"
-        MatchProduct "ZSA Technology Labs Inc ErgoDox EZ Glow"
-        Option "XkbLayout" "us"
-        Option "XkbOptions" "esperanto:qwerty,lv3:caps_switch"
-      EndSection
-
-      # https://bbs.archlinux.org/viewtopic.php?pid=1874850#p1874850
-      Section "Device"
-        Identifier "AMDGPU"
-        Driver "amdgpu"
-        Option "DRI" "2"
-      EndSection
-    '';
+    wrapperFeatures.gtk = true;
+    extraPackages = with pkgs; [
+      xwayland
+      i3status
+      swayidle
+      swaylock
+      wl-clipboard
+      mako
+      alacritty
+      wofi
+    ];
   };
+
+  # Enable the X11 windowing system.
+  # services.xserver = {
+  #   enable = true;
+  #   layout = "dvorak";
+
+  #   wacom.enable = true;
+
+  #   displayManager = {
+  #     # gdm.enable = true;
+  #     lightdm = {
+  #       enable = true;
+  #       # autoLogin.enable = true;
+  #       # autoLogin.user = "savanni";
+  #     };
+  #     defaultSession = "xfce";
+  #   };
+  #   desktopManager.gnome3.enable = true;
+  #   desktopManager.xfce.enable = true;
+  #   windowManager.i3 = {
+  #     enable = true;
+  #     # extraSessionCommands = ''
+  #     #   eval $(gnome-keyring-daemon --daemonize)
+  #     #   export SSH_AUTH_SOCK
+  #     # '';
+  #   };
+
+  #   videoDrivers = [ "amdgpu" ];
+
+  #   libinput.enable = true;
+  #   libinput.tapping = false;
+
+  #   config = ''
+  #     Section "InputClass"
+  #       Identifier "built-in keyboard"
+  #       MatchProduct "AT Translated Set 2 keyboard"
+  #       Option "XkbLayout" "dvorak"
+  #       Option "XkbOptions" "esperanto:dvorak,lv3:caps_switch"
+  #     EndSection
+
+  #     Section "InputClass"
+  #       Identifier "ErgoDox EZ"
+  #       MatchProduct "ZSA Technology Labs Inc ErgoDox EZ Glow"
+  #       Option "XkbLayout" "us"
+  #       Option "XkbOptions" "esperanto:qwerty,lv3:caps_switch"
+  #     EndSection
+
+  #     # https://bbs.archlinux.org/viewtopic.php?pid=1874850#p1874850
+  #     Section "Device"
+  #       Identifier "AMDGPU"
+  #       Driver "amdgpu"
+  #       Option "DRI" "2"
+  #     EndSection
+  #   '';
+  # };
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.savanni = {

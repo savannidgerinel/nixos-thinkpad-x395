@@ -44,15 +44,18 @@ in {
   #   options iwlwifi 11n_disable=1
   # '';
 
-  networking.hostName = "garnet"; # Define your hostname.
-  # networking.wicd.enable = true;
-  # networking.wireless = {
-  #   enable = true;
-  #   extraConfig = ''
-  #     ctrl_interface=/run/wpa_supplicant
-  #     ctrl_interface_group=wheel
-  #   '';
-  # };
+  networking = {
+    hostName = "garnet"; # Define your hostname.
+    # networking.wicd.enable = true;
+    # wireless = {
+    #   enable = true;
+    #   extraConfig = ''
+    #     ctrl_interface=/run/wpa_supplicant
+    #     ctrl_interface_group=wheel
+    #   '';
+    # };
+    networkmanager.enable = true;
+  };
 
   # The global useDHCP flag is deprecated, therefore explicitly set to false here.
   # Per-interface useDHCP will be mandatory in the future, so this generated config
@@ -167,13 +170,16 @@ in {
     wrapperFeatures.gtk = true;
     extraPackages = with pkgs; [
       xwayland
+      alacritty
+      bemenu
       i3status
+      mako
+      sway
       swayidle
       swaylock
       wl-clipboard
-      mako
-      alacritty
-      wofi
+      unstable.xdg-desktop-portal
+      unstable.xdg-desktop-portal-wlr
     ];
   };
 
@@ -235,7 +241,7 @@ in {
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.savanni = {
     isNormalUser = true;
-    extraGroups = [ "audio" "docker" "wheel" "dialout" "video" ];
+    extraGroups = [ "audio" "docker" "wheel" "dialout" "video" "networkmanager" ];
   };
 
   # This value determines the NixOS release with which your system is to be
@@ -284,14 +290,16 @@ in {
   environment.systemPackages = with pkgs; [
     unixtools.ifconfig
     efibootmgr
+    xdg_utils
   ];
 
-  # fonts.fonts = with pkgs; [
+  fonts.fonts = with pkgs; [
+    font-awesome
     # fira
     # fira-code
     # fira-code-symbols
     # fira-mono
-  # ];
+  ];
 
   # environment.shellInit = ''
   #   export GPG_TTY="$(tty)"
@@ -314,31 +322,31 @@ in {
 
   services.blueman.enable = true;
 
-  systemd.coredump.enable = false;
+  systemd.coredump.enable = true;
 
   services.plex = {
     enable = false;
     openFirewall = false;
   };
 
-  services.nginx = {
-    enable = true;
-    virtualHosts."star-trek-valen.localhost" = {
-        addSSL = false;
-        enableACME = false;
-        root = "/home/savanni/Documents/star-trek-valen/public/";
-    };
-    virtualHosts."numenera.localhost" = {
-        addSSL = false;
-        enableACME = false;
-        root = "/home/savanni/Documents/numenera/public/";
-    };
+  # services.nginx = {
+  #   enable = true;
+  #   virtualHosts."star-trek-valen.localhost" = {
+  #       addSSL = false;
+  #       enableACME = false;
+  #       root = "/home/savanni/Documents/star-trek-valen/public/";
+  #   };
+  #   virtualHosts."numenera.localhost" = {
+  #       addSSL = false;
+  #       enableACME = false;
+  #       root = "/home/savanni/Documents/numenera/public/";
+  #   };
 
-    virtualHosts."wiki.localhost" = {
-        addSSL = false;
-        enableACME = false;
-        root = "/home/savanni/Documents/wiki/public/";
-    };
-  };
+  #   virtualHosts."wiki.localhost" = {
+  #       addSSL = false;
+  #       enableACME = false;
+  #       root = "/home/savanni/Documents/wiki/public/";
+  #   };
+  # };
 }
 

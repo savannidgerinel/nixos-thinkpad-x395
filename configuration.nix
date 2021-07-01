@@ -5,15 +5,6 @@
 { config, pkgs, ... }:
 
 let
-  nixpkgsLocal = import /home/savanni/src/nixpkgs {};
-  before-sleep = pkgs.writeScript "before-sleep" ''
-    #!${pkgs.bash}/bin/bash
-    ${nixpkgsLocal.zenstates}/bin/zenstates --c6-disable
-  '';
-  nixpkgsUnstableSmall = builtins.fetchTarball {
-    url = https://nixos.org/channels/nixos-unstable-small/nixexprs.tar.xz;
-  };
-  pkgsUnstableSmall = import nixpkgsUnstableSmall {};
   unstable = import <unstable> {
     config = { allowUnfree = true; };
   };
@@ -22,6 +13,14 @@ in {
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
+
+      ./networking.nix
+
+      ./security.nix
+
+      ./sleep.nix
+
+      ./gui.nix
     ];
 
   # This value determines the NixOS release with which your system is to be
@@ -50,38 +49,7 @@ in {
   #   options iwlwifi 11n_disable=1
   # '';
 
-  networking = {
-    hostName = "garnet"; # Define your hostname.
-    # networking.wicd.enable = true;
-    # wireless = {
-    #   enable = true;
-    #   extraConfig = ''
-    #     ctrl_interface=/run/wpa_supplicant
-    #     ctrl_interface_group=wheel
-    #   '';
-    # };
-    networkmanager.enable = true;
-  };
-
-  # The global useDHCP flag is deprecated, therefore explicitly set to false here.
-  # Per-interface useDHCP will be mandatory in the future, so this generated config
-  # replicates the default behaviour.
-  networking.useDHCP = false;
-  networking.interfaces.enp3s0f0.useDHCP = false;
-  networking.interfaces.wlp1s0.useDHCP = false;
-
-  services.avahi = {
-    enable = true;
-    nssmdns = true;
-    publish.addresses = true;
-    publish.domain = true;
-  };
-
   services.dbus.packages = [ pkgs.gnome3.dconf ];
-
-  # Configure network proxy if necessary
-  # networking.proxy.default = "http://user:password@proxy:port/";
-  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
 
   # Select internationalisation properties.
   i18n = {
@@ -111,30 +79,6 @@ in {
   # Set your time zone.
   time.timeZone = "America/New_York";
   # time.timeZone = "America/Denver";
-
-  # Some programs need SUID wrappers, can be configured further or are
-  # started in user sessions.
-  # programs.mtr.enable = true;
-  # programs.gnupg.agent = { enable = true; enableSSHSupport = true; };
-  programs.gnupg = {
-    agent.enable = true;
-    agent.pinentryFlavor = "gnome3";
-    agent.enableSSHSupport = true;
-  };
-
-  # List services that you want to enable:
-
-  # Enable the OpenSSH daemon.
-  services.openssh = {
-    enable = true;
-    allowSFTP = true;
-  };
-
-  # Open ports in the firewall.
-  networking.firewall.allowedTCPPorts = [ 80 ];
-  # networking.firewall.allowedUDPPorts = [ ... ];
-  # Or disable the firewall altogether.
-  # networking.firewall.enable = false;
 
   # Enable CUPS to print documents.
   services.printing = {
@@ -199,97 +143,7 @@ in {
     package = pkgs.lib.mkForce pkgs.gnome3.gvfs;
   };
 
-  programs.sway = {
-    enable = true;
-    wrapperFeatures.gtk = true;
-    extraPackages = with pkgs; 
-      let
-        thunar = unstable.xfce.thunar.overrideAttrs {
-          thunarPlugins = [ unstable.xfce.thunar-volman unstable.xfce.thunar-archive-plugin ]; };
-      in [
-        xwayland
-        alacritty
-        bemenu
-        i3status
-        mako
-        sway
-        swayidle
-        swaylock
-        wl-clipboard
-        unstable.xdg-desktop-portal
-        unstable.xdg-desktop-portal-wlr
-        unstable.xfce.thunar
-      ];
-  };
-
   services.gnome.gnome-keyring.enable = true;
-
-  # displayManager.gdm = {
-  #   enable = true;
-  #   wayland = true;
-  # };
-
-  # services.xserver = {
-  #   enable = true;
-  #   displayManager.defaultSession = "sway";
-  #   libinput.enable = true;
-  #   layout = "dvorak";
-  # };
-
-  # Enable the X11 windowing system.
-  # services.xserver = {
-  #   enable = true;
-  #   layout = "dvorak";
-
-  #   wacom.enable = true;
-
-  #   displayManager = {
-  #     # gdm.enable = true;
-  #     lightdm = {
-  #       enable = true;
-  #       # autoLogin.enable = true;
-  #       # autoLogin.user = "savanni";
-  #     };
-  #     defaultSession = "xfce";
-  #   };
-  #   desktopManager.gnome3.enable = true;
-  #   desktopManager.xfce.enable = true;
-  #   windowManager.i3 = {
-  #     enable = true;
-  #     # extraSessionCommands = ''
-  #     #   eval $(gnome-keyring-daemon --daemonize)
-  #     #   export SSH_AUTH_SOCK
-  #     # '';
-  #   };
-
-  #   videoDrivers = [ "amdgpu" ];
-
-  #   libinput.enable = true;
-  #   libinput.tapping = false;
-
-  #   config = ''
-  #     Section "InputClass"
-  #       Identifier "built-in keyboard"
-  #       MatchProduct "AT Translated Set 2 keyboard"
-  #       Option "XkbLayout" "dvorak"
-  #       Option "XkbOptions" "esperanto:dvorak,lv3:caps_switch"
-  #     EndSection
-
-  #     Section "InputClass"
-  #       Identifier "ErgoDox EZ"
-  #       MatchProduct "ZSA Technology Labs Inc ErgoDox EZ Glow"
-  #       Option "XkbLayout" "us"
-  #       Option "XkbOptions" "esperanto:qwerty,lv3:caps_switch"
-  #     EndSection
-
-  #     # https://bbs.archlinux.org/viewtopic.php?pid=1874850#p1874850
-  #     Section "Device"
-  #       Identifier "AMDGPU"
-  #       Driver "amdgpu"
-  #       Option "DRI" "2"
-  #     EndSection
-  #   '';
-  # };
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.savanni = {
@@ -297,30 +151,8 @@ in {
     extraGroups = [ "audio" "docker" "wheel" "dialout" "video" "networkmanager" "libvirtd" ];
   };
 
-  # Enable backlight management
-  programs.light.enable = true;
-  services.actkbd = {
-    enable = true;
-    bindings = [
-      { keys = [ 225 ]; events = [ "key" ]; command = "/run/current-system/sw/bin/light -s sysfs/backlight/amdgpu_bl0 -A 10"; }
-      { keys = [ 224 ]; events = [ "key" ]; command = "/run/current-system/sw/bin/light -s sysfs/backlight/amdgpu_bl0 -U 10"; }
-      # This one is supposed to be catching the F7/monitor switch key, but I don't see any indication that it's running the monitor switch command.
-      # { keys = [ 227 ]; events = [ "key" ]; command = "/home/savanni/monitor-switch.sh"; }
-    ];
-  };
-
   services.tlp = {
     enable = false;
-  };
-
-  systemd.services.before-sleep = {
-    description = "Jobs to run before going to sleep";
-    serviceConfig = {
-      Type = "oneshot";
-      ExecStart = "${before-sleep}";
-    };
-    wantedBy = [ "sleep.target" ];
-    before = [ "sleep.target" ];
   };
 
   services.fwupd.enable = true;
@@ -343,29 +175,8 @@ in {
     efibootmgr
     xdg_utils
     lxqt.lxqt-policykit
+    brightnessctl
   ];
-
-  fonts.fonts = with pkgs; [
-    font-awesome
-    # fira
-    # fira-code
-    # fira-code-symbols
-    # fira-mono
-  ];
-
-  # environment.shellInit = ''
-  #   export GPG_TTY="$(tty)"
-  #   gpg-connect-agent /bye
-  #   export SSH_AUTH_SOCK="/run/user/$UID/gnupg/S.gpg-agent.ssh"
-  # '';
-
-  # programs.ssh {
-  #   ssh.startAgent = false;
-  #   gnupg.agent = {
-  #     enable = true;
-  #     enableSSHSupport = true;
-  #   };
-  # };
 
   hardware.bluetooth = {
     enable = true;

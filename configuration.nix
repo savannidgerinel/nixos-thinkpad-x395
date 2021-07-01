@@ -24,6 +24,12 @@ in {
       ./hardware-configuration.nix
     ];
 
+  # This value determines the NixOS release with which your system is to be
+  # compatible, in order to avoid breaking some software such as database
+  # servers. You should change this only after NixOS release notes say you
+  # should.
+  system.stateVersion = "20.09"; # Did you read the comment?
+
   nixpkgs.config.allowUnfree = true;
 
   hardware.cpu.amd.updateMicrocode = true;
@@ -37,7 +43,7 @@ in {
   # boot.kernelPackages = pkgsUnstableSmall.linuxPackages_latest;
   boot.kernelPackages = pkgs.linuxPackages_latest;
   # boot.kernelModules = [ "kvm-amd" ];
-  boot.kernelModules = [ "fuse" "kvm-amd" "msr" "kvm-intel" "amdgpu" ];
+  boot.kernelModules = [ "fuse" "kvm-amd" "msr" "kvm-intel" "amdgpu" "acpi_call" "usbmon" "usbserial" ];
   # boot.blacklistedKernelModules = [ "btusb" ];
   # boot.extraModulePackages = with config.boot.kernelPackages; [ acpi_call ];
   # boot.extraModprobeConfig = ''
@@ -137,23 +143,46 @@ in {
   };
 
   # Enable sound.
-  sound.enable = true;
-  hardware.pulseaudio = {
-    enable = true;
-    extraModules = [ pkgs.pulseaudio-modules-bt ];
-    extraConfig = ''
-      load-module module-switch-on-connect
-    '';
-    package = pkgs.pulseaudioFull;
-  };
-
-  # services.pipewire = {
+  # sound.enable = true;
+  # hardware.pulseaudio = {
   #   enable = true;
-  #   # alsa.enable = true;
-  #   # alsa.support32Bit = true;
-  #   pulse.enable = true;
-  #   # jack.enable = true;
+  #   extraModules = [ pkgs.pulseaudio-modules-bt ];
+  #   extraConfig = ''
+  #     load-module module-switch-on-connect
+  #   '';
+  #   package = pkgs.pulseaudioFull;
   # };
+
+  services.pipewire = {
+    enable = true;
+    alsa = {
+      enable = true;
+      support32Bit = true;
+    };
+    pulse.enable = true;
+    # jack.enable = true;
+
+    # media-session.config.bluez-monitor.rules = [
+    #   {
+    #     matches = [ { "device.name" = "~bluez_card.*"; } ];
+    #     actions = {
+    #       "update-props" = {
+    #         "bluez5.reconnect-profiles" = [ "a2dp_sink" ];
+    #         "bluez.msbc-support" = true;
+    #       };
+    #     };
+    #   }
+    #   {
+    #     matches = [
+    #       { "node.name" = "~bluez_input.*"; }
+    #       { "node.name" = "~bluez_output.*"; }
+    #     ];
+    #     actions = {
+    #       "node.pause_on_idle" = false;
+    #     };
+    #   }
+    # ];
+  };
 
   hardware.opengl = {
     enable = true;
@@ -165,23 +194,47 @@ in {
     ];
   };
 
+  services.gvfs = {
+    enable = true;
+    package = pkgs.lib.mkForce pkgs.gnome3.gvfs;
+  };
+
   programs.sway = {
     enable = true;
     wrapperFeatures.gtk = true;
-    extraPackages = with pkgs; [
-      xwayland
-      alacritty
-      bemenu
-      i3status
-      mako
-      sway
-      swayidle
-      swaylock
-      wl-clipboard
-      unstable.xdg-desktop-portal
-      unstable.xdg-desktop-portal-wlr
-    ];
+    extraPackages = with pkgs; 
+      let
+        thunar = unstable.xfce.thunar.overrideAttrs {
+          thunarPlugins = [ unstable.xfce.thunar-volman unstable.xfce.thunar-archive-plugin ]; };
+      in [
+        xwayland
+        alacritty
+        bemenu
+        i3status
+        mako
+        sway
+        swayidle
+        swaylock
+        wl-clipboard
+        unstable.xdg-desktop-portal
+        unstable.xdg-desktop-portal-wlr
+        unstable.xfce.thunar
+      ];
   };
+
+  services.gnome.gnome-keyring.enable = true;
+
+  # displayManager.gdm = {
+  #   enable = true;
+  #   wayland = true;
+  # };
+
+  # services.xserver = {
+  #   enable = true;
+  #   displayManager.defaultSession = "sway";
+  #   libinput.enable = true;
+  #   layout = "dvorak";
+  # };
 
   # Enable the X11 windowing system.
   # services.xserver = {
@@ -241,14 +294,8 @@ in {
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.savanni = {
     isNormalUser = true;
-    extraGroups = [ "audio" "docker" "wheel" "dialout" "video" "networkmanager" ];
+    extraGroups = [ "audio" "docker" "wheel" "dialout" "video" "networkmanager" "libvirtd" ];
   };
-
-  # This value determines the NixOS release with which your system is to be
-  # compatible, in order to avoid breaking some software such as database
-  # servers. You should change this only after NixOS release notes say you
-  # should.
-  system.stateVersion = "19.09"; # Did you read the comment?
 
   # Enable backlight management
   programs.light.enable = true;
@@ -260,6 +307,10 @@ in {
       # This one is supposed to be catching the F7/monitor switch key, but I don't see any indication that it's running the monitor switch command.
       # { keys = [ 227 ]; events = [ "key" ]; command = "/home/savanni/monitor-switch.sh"; }
     ];
+  };
+
+  services.tlp = {
+    enable = false;
   };
 
   systemd.services.before-sleep = {
@@ -291,6 +342,7 @@ in {
     unixtools.ifconfig
     efibootmgr
     xdg_utils
+    lxqt.lxqt-policykit
   ];
 
   fonts.fonts = with pkgs; [

@@ -2,7 +2,33 @@
 
 let
   unstable = import <unstable> { };
+
+  startsway = pkgs.writeTextFile {
+    name = "startsway";
+    destination = "/bin/startsway";
+    executable = true;
+    text = ''
+      #! ${pkgs.bash}/bin/bash
+      # systemctl --user import-environment
+      # exec systemctl --user start sway.service
+      sway
+      waitPID=$!
+    '';
+  };
+
 in {
+
+  services.xserver = {
+    enable = false;
+    displayManager.gdm.enable = false;
+    displayManager.defaultSession = "sway";
+    windowManager.i3.enable = true;
+    displayManager.session = [ { manage = "desktop"; name = "Sway"; start = startsway; } ];
+    libinput.enable = true;
+    desktopManager.xterm.enable = false;
+    xkbVariant = "dvorak";
+  };
+
   programs.sway = {
     enable = true;
     wrapperFeatures.gtk = true;
@@ -23,25 +49,46 @@ in {
         unstable.xdg-desktop-portal
         unstable.xdg-desktop-portal-wlr
         unstable.xfce.thunar
+	gnome3.nautilus
       ];
+    extraSessionCommands = ''
+      eval $(gnome-keyring-daemon --start --components=pkcs11,secrets,ssh);
+      export SSH_AUTH_SOCK;
+    '';
   };
 
-  # Enable backlight management
-  # programs.light.enable = true;
-  # services.actkbd = {
-  #   enable = true;
-  #   bindings = [
-  #     { keys = [ 225 ]; events = [ "key" ]; command = "/run/current-system/sw/bin/light -s sysfs/backlight/amdgpu_bl0 -A 10"; }
-  #     { keys = [ 224 ]; events = [ "key" ]; command = "/run/current-system/sw/bin/light -s sysfs/backlight/amdgpu_bl0 -U 10"; }
-  #     # This one is supposed to be catching the F7/monitor switch key, but I don't see any indication that it's running the monitor switch command.
-  #     # { keys = [ 227 ]; events = [ "key" ]; command = "/home/savanni/monitor-switch.sh"; }
-  #   ];
-  # };
+  systemd.user.targets.sway-session = {
+    description = "Sway compositor session";
+    documentation = [ "man:systemd.special(7)" ];
+    bindsTo = [ "graphical-session.target" ];
+    wants = [ "graphical-session-pre.target" ];
+    after = [ "graphical-session-pre.target" ];
+  };
 
-  fonts.fonts = with pkgs; [
-    font-awesome
-    fira-code
-  ];
+  systemd.user.services.sway = {
+    description = "Sway - Wayland window manager";
+    documentation = [ "man:sway(5)" ];
+    bindsTo = [ "graphical-session.target" ];
+    wants = [ "graphical-session-pre.target" ];
+    after = [ "graphical-session-pre.target" ];
+    environment.PATH = lib.mkForce null;
+    serviceConfig = {
+      Type = "simple";
+      ExecStart = ''
+        ${pkgs.dbus}/bin/dbus-run-session ${pkgs.sway}/bin/sway --debug
+      '';
+      Restart = "on-failure";
+      RestartSec = 1;
+      TimeoutStopSec = 10;
+    };
+  };
 
+  fonts = {
+    enableDefaultFonts = true;
+    fonts = with pkgs; [
+      font-awesome
+      fira-code
+    ];
+  };
 }
 

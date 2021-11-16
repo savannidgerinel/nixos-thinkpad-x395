@@ -9,6 +9,10 @@ let
     config = { allowUnfree = true; };
   };
 
+  local = import /home/savanni/src/nixpkgs {
+    config = { allowUnfree = true; };
+  };
+
 in {
   imports =
     [ # Include the results of the hardware scan.
@@ -21,6 +25,12 @@ in {
       ./sleep.nix
 
       ./gui.nix
+
+      # ({ config, lib, pkgs, ... }: import /home/savanni/src/nixpkgs/nixos/modules/programs/1password-gui.nix { 
+      # 	pkgs = pkgs // { _1password-gui = local._1password-gui; };
+      #   config = config;
+      #   lib = lib;
+      # })
     ];
 
   # This value determines the NixOS release with which your system is to be
@@ -40,9 +50,9 @@ in {
   # Debugging suspend/resume issues: https://bbs.archlinux.org/viewtopic.php?id=248278
   boot.kernelParams = [ "acpi_osi=Linux" "acpi_backlight=none" "processor.max_cstate=4" "amd_iommu=off" "idle=nomwait" "initcall_debug" ];
   # boot.kernelPackages = pkgsUnstableSmall.linuxPackages_latest;
-  boot.kernelPackages = pkgs.linuxPackages_latest;
+  boot.kernelPackages = pkgs.linuxPackages_5_14;
   # boot.kernelModules = [ "kvm-amd" ];
-  boot.kernelModules = [ "fuse" "kvm-amd" "msr" "kvm-intel" "amdgpu" "acpi_call" "usbmon" "usbserial" ];
+  boot.kernelModules = [ "fuse" "kvm-amd" "msr" "kvm-intel" "amdgpu" "acpi_call" "usbmon" "usbserial" "timer_stats" ];
   # boot.blacklistedKernelModules = [ "btusb" ];
   # boot.extraModulePackages = with config.boot.kernelPackages; [ acpi_call ];
   # boot.extraModprobeConfig = ''
@@ -68,10 +78,12 @@ in {
     extraRules = ''
       ACTION=="add", KERNEL=="ttyUSB0", MODE="0660", GROUP="dialout"
       SUBSYSTEM=="usb", ATTRS{product}=="USBtiny", ATTRS{idProduct}=="0c9f", ATTRS{idVendor}=="1781", MODE="0660", GROUP="dialout"
-      SUBSYSTEM=="usb", ATTRS{idVendor}=="28de", MODE="0660", TAG+="uaccess"
-      KERNEL=="uinput", SUBSYSTEM=="misc", OPTIONS+="static_node=uinput", TAG+="uaccess", OPTIONS+="static_node=uinput"
-      KERNEL=="hidraw*", ATTRS{idVendor}=="28de", MODE="0660", TAG+="uaccess"
-      KERNEL=="hidraw*", KERNELS=="*28DE:*", MODE="0660", TAG+="uaccess"
+      ACTION=="add", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="c52b", MODE="0660", GROUP="dialout"
+      # SUBSYSTEM=="usb", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="c52b", MODE="0660"
+      # SUBSYSTEM=="usb", ATTRS{idVendor}=="28de", MODE="0660", TAG+="uaccess"
+      # KERNEL=="uinput", SUBSYSTEM=="misc", OPTIONS+="static_node=uinput", TAG+="uaccess", OPTIONS+="static_node=uinput"
+      # KERNEL=="hidraw*", ATTRS{idVendor}=="28de", MODE="0660", TAG+="uaccess"
+      # KERNEL=="hidraw*", KERNELS=="*28DE:*", MODE="0660", TAG+="uaccess"
     '';
   };
   services.pcscd.enable = true;
@@ -87,15 +99,15 @@ in {
   };
 
   # Enable sound.
-  # sound.enable = true;
-  # hardware.pulseaudio = {
-  #   enable = true;
-  #   extraModules = [ pkgs.pulseaudio-modules-bt ];
-  #   extraConfig = ''
-  #     load-module module-switch-on-connect
-  #   '';
-  #   package = pkgs.pulseaudioFull;
-  # };
+  sound.enable = true;
+  hardware.pulseaudio = {
+    enable = false;
+    extraModules = [ pkgs.pulseaudio-modules-bt ];
+    extraConfig = ''
+      load-module module-switch-on-connect
+    '';
+    package = pkgs.pulseaudioFull;
+  };
 
   services.pipewire = {
     enable = true;
@@ -143,7 +155,7 @@ in {
     package = pkgs.lib.mkForce pkgs.gnome3.gvfs;
   };
 
-  services.gnome.gnome-keyring.enable = true;
+  services.samba.enable = false;
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.savanni = {
@@ -158,14 +170,14 @@ in {
   services.fwupd.enable = true;
 
   virtualisation = {
-    # docker.enable = true;
+    docker.enable = false;
 
     # virtualbox.host = {
     #   enable = true;
     #   enableExtensionPack = true;
     # };
 
-    libvirtd.enable = true;
+    libvirtd.enable = false;
   };
 
   # List packages installed in system profile. To search, run:
@@ -176,6 +188,9 @@ in {
     xdg_utils
     lxqt.lxqt-policykit
     brightnessctl
+    solaar
+    # _1password-gui
+    cifs-utils
   ];
 
   hardware.bluetooth = {
@@ -192,24 +207,28 @@ in {
     openFirewall = false;
   };
 
-  # services.nginx = {
+  # programs._1password-gui = {
   #   enable = true;
+  # };
+
+  services.nginx = {
+    enable = false;
   #   virtualHosts."star-trek-valen.localhost" = {
   #       addSSL = false;
   #       enableACME = false;
   #       root = "/home/savanni/Documents/star-trek-valen/public/";
   #   };
-  #   virtualHosts."numenera.localhost" = {
-  #       addSSL = false;
-  #       enableACME = false;
-  #       root = "/home/savanni/Documents/numenera/public/";
-  #   };
+    virtualHosts."numenera.localhost" = {
+        addSSL = false;
+        enableACME = false;
+        root = "/home/savanni/Documents/numenera/public/";
+    };
 
   #   virtualHosts."wiki.localhost" = {
   #       addSSL = false;
   #       enableACME = false;
   #       root = "/home/savanni/Documents/wiki/public/";
   #   };
-  # };
+  };
 }
 

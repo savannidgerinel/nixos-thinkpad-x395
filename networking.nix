@@ -13,11 +13,24 @@
   networking.interfaces.enp3s0f0.useDHCP = false;
   networking.interfaces.wlp1s0.useDHCP = false;
 
+  networking.firewall.enable = true;
+  networking.firewall.allowedTCPPorts = [ 139 445 ];
+  networking.firewall.allowedUDPPorts = [ 137 138 ];
+  networking.firewall.checkReversePath = false;
+
   services.avahi = {
     enable = true;
     nssmdns = true;
     publish.addresses = true;
     publish.domain = true;
   };
+
+  # services.squid = {
+  #   enable = true;
+  #   proxyPort = 3128;
+  #   extraConfig = ''
+  #     https_port 3129
+  #   '';
+  # };
 }
 

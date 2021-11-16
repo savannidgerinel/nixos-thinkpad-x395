@@ -1,10 +1,9 @@
 { config, lib, pkgs, ... }:
 
 let
-  nixpkgsLocal = import /home/savanni/src/nixpkgs {};
   before-sleep = pkgs.writeScript "before-sleep" ''
     #!${pkgs.bash}/bin/bash
-    ${nixpkgsLocal.zenstates}/bin/zenstates --c6-disable
+    ${pkgs.zenstates}/bin/zenstates --c6-disable
   '';
 
 in {

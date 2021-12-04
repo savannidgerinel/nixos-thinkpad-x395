@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 
 let
   unstable = import <unstable> {
@@ -22,7 +22,7 @@ in {
 
       ./security.nix
 
-      ./sleep.nix
+      # ./sleep.nix
 
       ./gui.nix
 
@@ -48,9 +48,20 @@ in {
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
   # Debugging suspend/resume issues: https://bbs.archlinux.org/viewtopic.php?id=248278
-  boot.kernelParams = [ "acpi_osi=Linux" "acpi_backlight=none" "processor.max_cstate=4" "amd_iommu=off" "idle=nomwait" "initcall_debug" ];
+  # boot.kernelParams = [ "acpi_osi=Linux" "acpi_backlight=none" "processor.max_cstate=4" "amd_iommu=off" "idle=nomwait" "initcall_debug" ];
+  boot.kernelParams = [ "acpi_osi=Linux" "acpi_backlight=none" ];
   # boot.kernelPackages = pkgsUnstableSmall.linuxPackages_latest;
-  boot.kernelPackages = pkgs.linuxPackages_5_14;
+  # boot.kernelPackages = pkgs.linuxPackages_5_14;
+  boot.kernelPackages = pkgs.linuxPackagesFor (pkgs.linux_5_14.override {
+    argsOverride = rec {
+      src = pkgs.fetchurl {
+        url = "mirror://kernel/linux/kernel/v5.x/linux-${version}.tar.xz";
+	sha256 = "1pr7qh2wjw7h6r3fixg9ia5r3na7vdb6b4sp9wnbifnqckahzwis";
+      };
+      version = "5.14.18";
+      modDirVersion = "5.14.18";
+    };
+  });
   # boot.kernelModules = [ "kvm-amd" ];
   boot.kernelModules = [ "fuse" "kvm-amd" "msr" "kvm-intel" "amdgpu" "acpi_call" "usbmon" "usbserial" "timer_stats" ];
   # boot.blacklistedKernelModules = [ "btusb" ];
@@ -191,6 +202,7 @@ in {
     solaar
     # _1password-gui
     cifs-utils
+    xdg-launch
   ];
 
   hardware.bluetooth = {

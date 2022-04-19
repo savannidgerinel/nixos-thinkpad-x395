@@ -13,6 +13,21 @@ let
     config = { allowUnfree = true; };
   };
 
+  # _1password-gui = local._1password-gui;
+  # _1password-gui = local._1password-gui.override {
+  #   polkitPolicyOwners = [ "savanni" ];
+  # };
+  _1password-gui = let ver = "8.7.0-41.BETA";
+    in local._1password-gui.overrideAttrs ({ ... }: {
+      version = ver;
+      src = pkgs.fetchurl {
+        url = "https://downloads.1password.com/linux/tar/beta/x86_64/1password-${ver}.x64.tar.gz";
+        sha256 = "BXyn8KGrx8uvaU7iISEJ6L6R7wWxb6sfgktKqKkKpxg=";
+      };
+      postInstallPhase = ''
+      '';
+    });
+
 in {
   imports =
     [ # Include the results of the hardware scan.
@@ -26,11 +41,7 @@ in {
 
       ./gui.nix
 
-      # ({ config, lib, pkgs, ... }: import /home/savanni/src/nixpkgs/nixos/modules/programs/1password-gui.nix { 
-      # 	pkgs = pkgs // { _1password-gui = local._1password-gui; };
-      #   config = config;
-      #   lib = lib;
-      # })
+      /home/savanni/src/nixpkgs/nixos/modules/programs/_1password-gui.nix
     ];
 
   # This value determines the NixOS release with which your system is to be
@@ -52,18 +63,20 @@ in {
   boot.kernelParams = [ "acpi_osi=Linux" "acpi_backlight=none" ];
   # boot.kernelPackages = pkgsUnstableSmall.linuxPackages_latest;
   # boot.kernelPackages = pkgs.linuxPackages_5_14;
-  boot.kernelPackages = pkgs.linuxPackagesFor (pkgs.linux_5_14.override {
-    argsOverride = rec {
-      src = pkgs.fetchurl {
-        url = "mirror://kernel/linux/kernel/v5.x/linux-${version}.tar.xz";
-	sha256 = "1pr7qh2wjw7h6r3fixg9ia5r3na7vdb6b4sp9wnbifnqckahzwis";
-      };
-      version = "5.14.18";
-      modDirVersion = "5.14.18";
-    };
-  });
+  boot.kernelPackages = pkgs.linuxPackages_5_15;
+  # boot.kernelPackages = pkgs.linuxPackagesFor (pkgs.linux_5_15.override {
+  #   argsOverride = rec {
+  #     src = pkgs.fetchurl {
+  #       url = "mirror://kernel/linux/kernel/v5.x/linux-${version}.tar.xz";
+  #       sha256 = "1pr7qh2wjw7h6r3fixg9ia5r3na7vdb6b4sp9wnbifnqckahzwis";
+  #     };
+  #     version = "5.14.18";
+  #     modDirVersion = "5.14.18";
+  #   };
+  # });
   # boot.kernelModules = [ "kvm-amd" ];
   boot.kernelModules = [ "fuse" "kvm-amd" "msr" "kvm-intel" "amdgpu" "acpi_call" "usbmon" "usbserial" "timer_stats" ];
+
   # boot.blacklistedKernelModules = [ "btusb" ];
   # boot.extraModulePackages = with config.boot.kernelPackages; [ acpi_call ];
   # boot.extraModprobeConfig = ''
@@ -80,6 +93,13 @@ in {
   console = {
     font = "Lat2-Terminus16";
     keyMap = "dvorak";
+  };
+
+  nix = {
+    package = pkgs.nixFlakes;
+    extraOptions = ''
+      experimental-features = nix-command flakes
+    '';
   };
 
   # System-udev-settle never succeeds, so this effectively disables it
@@ -174,6 +194,8 @@ in {
     extraGroups = [ "audio" "docker" "wheel" "dialout" "video" "networkmanager" "libvirtd" ];
   };
 
+  services.power-profiles-daemon.enable = true;
+
   services.tlp = {
     enable = false;
   };
@@ -203,6 +225,7 @@ in {
     # _1password-gui
     cifs-utils
     xdg-launch
+    gnome.gnome-tweak-tool
   ];
 
   hardware.bluetooth = {
@@ -214,14 +237,12 @@ in {
 
   systemd.coredump.enable = true;
 
-  services.plex = {
-    enable = false;
-    openFirewall = false;
+  programs._1password-gui = {
+    enable = true;
+    groupId = 5000;
+    polkitPolicyOwners = [ "savanni" ];
+    package = _1password-gui;
   };
-
-  # programs._1password-gui = {
-  #   enable = true;
-  # };
 
   services.nginx = {
     enable = false;
@@ -242,5 +263,11 @@ in {
   #       root = "/home/savanni/Documents/wiki/public/";
   #   };
   };
+
+  # services.gitea = {
+  #   enable = true;
+  #   stateDir = "/home/gitea";
+  #   disableRegistration = true;
+  # };
 }
 

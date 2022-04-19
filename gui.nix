@@ -3,34 +3,32 @@
 let
   unstable = import <unstable> { };
 
-  startsway = pkgs.writeTextFile {
-    name = "startsway";
-    destination = "/bin/startsway";
-    executable = true;
-    text = ''
-      #! ${pkgs.bash}/bin/bash
-      # systemctl --user import-environment
-      # exec systemctl --user start sway.service
-      sway
-      waitPID=$!
-    '';
-  };
+  # startsway = pkgs.writeTextFile {
+  #   name = "startsway";
+  #   destination = "/bin/startsway";
+  #   executable = true;
+  #   text = ''
+  #     #! ${pkgs.bash}/bin/bash
+  #     # systemctl --user import-environment
+  #     # exec systemctl --user start sway.service
+  #     export MOZ_ENABLE_WAYLAND=1
+  #     sway
+  #     # waitPID=$!
+  #   '';
+  # };
 
 in {
 
   services.xserver = {
-    enable = false;
-    displayManager.gdm.enable = false;
-    displayManager.defaultSession = "sway";
-    windowManager.i3.enable = true;
-    displayManager.session = [ { manage = "desktop"; name = "Sway"; start = startsway; } ];
+    enable = true;
+    displayManager.gdm.enable = true;
+    desktopManager.gnome.enable = true;
     libinput.enable = true;
-    desktopManager.xterm.enable = false;
     xkbVariant = "dvorak";
   };
 
   programs.sway = {
-    enable = true;
+    enable = false;
     wrapperFeatures.gtk = true;
     extraPackages = with pkgs; 
       let
@@ -46,16 +44,25 @@ in {
         swayidle
         swaylock
         wl-clipboard
-        unstable.xdg-desktop-portal
-        unstable.xdg-desktop-portal-wlr
         unstable.xfce.thunar
-	gnome3.nautilus
+        gnome3.nautilus
+        pinentry
+        pinentry-gnome
+        xdg-desktop-portal
+        xdg-desktop-portal-wlr
+        xdg-desktop-portal-gnome
       ];
     extraSessionCommands = ''
       eval $(gnome-keyring-daemon --start --components=pkcs11,secrets,ssh);
       export SSH_AUTH_SOCK;
     '';
   };
+
+  /*
+  xdg.portal.enable = true;
+  xdg.portal.wlr.enable = true;
+  xdg.portal.gtkUsePortal = true;
+  */
 
   systemd.user.targets.sway-session = {
     description = "Sway compositor session";

@@ -14,7 +14,7 @@
   networking.interfaces.wlp1s0.useDHCP = false;
 
   networking.firewall.enable = true;
-  networking.firewall.allowedTCPPorts = [ 139 445 ];
+  networking.firewall.allowedTCPPorts = [ 139 445 6006 ];
   networking.firewall.allowedUDPPorts = [ 137 138 ];
   networking.firewall.checkReversePath = false;
 
@@ -32,5 +32,7 @@
   #     https_port 3129
   #   '';
   # };
+
+  services.jellyfin.enable = true;
 }
 
